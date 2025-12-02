@@ -4,19 +4,20 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
     /**
      * Display the registration view.
      */
-    public function create()
+    public function create(): View
     {
         return view('auth.register');
     }
@@ -26,42 +27,32 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
-        // 1. Validate all the new fields
+        // 1. Validate the new fields
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:users'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'username' => ['required', 'string', 'max:255', 'unique:'.User::class], // Added
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'campus' => ['required', 'string'],
-            'contact_number' => ['required', 'string', 'max:20'],
-            'profile_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'campus' => ['required', 'string', 'max:255'],        // Added
+            'contact_number' => ['required', 'string', 'max:20'], // Added
         ]);
 
-        // 2. Prepare the data array
-        $data = [
+        // 2. Save the new fields to the database
+        $user = User::create([
             'name' => $request->name,
-            'username' => $request->username,
+            'username' => $request->username, // Added
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'campus' => $request->campus,
-            'contact_number' => $request->contact_number,
-        ];
-
-        // 3. Handle profile photo upload if it exists
-        if ($request->hasFile('profile_photo')) {
-            $path = $request->file('profile_photo')->store('profile-photos', 'public');
-            $data['profile_photo'] = $path;
-        }
-
-        // 4. Create the user with ALL fields
-        $user = User::create($data);
+            'campus' => $request->campus,                 // Added
+            'contact_number' => $request->contact_number, // Added
+        ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect()->route('home');
+        return redirect(route('dashboard', absolute: false));
     }
 }

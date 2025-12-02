@@ -11,26 +11,21 @@ use Illuminate\Validation\Rules;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile.
-     */
+    // ... [show method remains the same] ...
     public function show(User $user)
     {
-        // Get user's active posts
         $posts = $user->posts()
             ->active()
             ->with(['user', 'upvotes', 'comments'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Get user's resolved posts
         $resolvedPosts = $user->posts()
             ->resolved()
             ->with(['user', 'upvotes', 'comments'])
             ->orderBy('updated_at', 'desc')
             ->get();
 
-        // Get posts the user has upvoted
         $upvotedPosts = $user->upvotes()
             ->with(['post.user', 'post.upvotes', 'post.comments'])
             ->latest()
@@ -38,7 +33,6 @@ class ProfileController extends Controller
             ->pluck('post')
             ->filter();
 
-        // Get comments made by the user
         $userComments = $user->comments()
             ->with('post.user')
             ->orderBy('created_at', 'desc')
@@ -52,12 +46,12 @@ class ProfileController extends Controller
      */
     public function edit()
     {
-        return redirect()->route('profile.show', Auth::id());
+        // FIX: Return the view instead of redirecting
+        return view('profile.edit', ['user' => Auth::user()]);
     }
 
-    /**
-     * Update the user's profile information.
-     */
+    // ... [update, updatePassword, destroy methods remain the same] ...
+
     public function update(Request $request)
     {
         /** @var \App\Models\User $user */
@@ -78,9 +72,6 @@ class ProfileController extends Controller
             ->with('success', 'Profile updated successfully!');
     }
 
-    /**
-     * Update the user's password.
-     */
     public function updatePassword(Request $request)
     {
         /** @var \App\Models\User $user */
@@ -100,9 +91,6 @@ class ProfileController extends Controller
             ->with('success', 'Password updated successfully!');
     }
 
-    /**
-     * Delete the user's account.
-     */
     public function destroy(Request $request)
     {
         $request->validate([

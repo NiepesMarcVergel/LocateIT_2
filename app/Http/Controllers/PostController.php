@@ -10,17 +10,13 @@ use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
-    /**
-     * Show the form for creating a new post.
-     */
+    // ... [create, store, show, edit methods remain the same] ...
+
     public function create()
     {
         return view('posts.create');
     }
 
-    /**
-     * Store a newly created post in storage.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -34,46 +30,32 @@ class PostController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        // Add user_id to the data
         $data = $validated;
         $data['user_id'] = Auth::id();
         $data['status'] = 'active';
 
-        // Handle Image Upload
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('posts', 'public');
             $data['image'] = $path;
         }
 
-        $post = Post::create($data);
+        Post::create($data);
 
         return redirect()->route('home')->with('success', 'Post created successfully!');
     }
 
-    /**
-     * Display the specified post.
-     */
     public function show(Post $post)
     {
-        // Increment view count
         $post->increment('views');
-
-        // Load relationships needed for the view
         $post->load(['user', 'comments.user', 'upvotes']);
-
         return view('posts.show', compact('post'));
     }
 
-    /**
-     * Show the form for editing the specified post.
-     */
     public function edit(Post $post)
     {
-        // Authorization: Ensure user owns the post
         if ($post->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
-
         return view('posts.edit', compact('post'));
     }
 
@@ -97,7 +79,9 @@ class PostController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $data = $validated;
+        // FIX: Start with validated data but remove 'image' key initially 
+        // to prevent overwriting with null if no file is uploaded.
+        $data = collect($validated)->except(['image'])->toArray();
 
         // Handle Image Update
         if ($request->hasFile('image')) {
@@ -114,16 +98,14 @@ class PostController extends Controller
         return redirect()->route('posts.show', $post)->with('success', 'Post updated successfully!');
     }
 
-    /**
-     * Remove the specified post from storage.
-     */
+    // ... [destroy, resolve, toggleUpvote methods remain the same] ...
+    
     public function destroy(Post $post)
     {
         if ($post->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
-        // Delete image if exists
         if ($post->image) {
             Storage::disk('public')->delete($post->image);
         }
@@ -133,9 +115,6 @@ class PostController extends Controller
         return redirect()->route('home')->with('success', 'Post deleted successfully!');
     }
 
-    /**
-     * Mark the post as resolved.
-     */
     public function resolve(Post $post)
     {
         if ($post->user_id !== Auth::id()) {
@@ -147,24 +126,18 @@ class PostController extends Controller
         return response()->json(['success' => true]);
     }
 
-    /**
-     * Toggle upvote for a post.
-     */
     public function toggleUpvote(Post $post)
     {
         $user = Auth::user();
         
-        // Check if already upvoted
         $existingUpvote = Upvote::where('post_id', $post->id)
             ->where('user_id', $user->id)
             ->first();
 
         if ($existingUpvote) {
-            // Remove upvote
             $existingUpvote->delete();
             $upvoted = false;
         } else {
-            // Add upvote
             Upvote::create([
                 'post_id' => $post->id,
                 'user_id' => $user->id
