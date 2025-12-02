@@ -18,6 +18,30 @@
                     @include('profile.partials.update-password-form')
                 </div>
             </div>
+            
+            {{-- START: New Log Out Section --}}
+            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
+                <div class="max-w-xl">
+                    <section>
+                        <header>
+                            <h2 class="text-lg font-medium text-gray-900">
+                                {{ __('Log Out') }}
+                            </h2>
+                            <p class="mt-1 text-sm text-gray-600">
+                                {{ __('End your current session.') }}
+                            </p>
+                        </header>
+
+                        <form method="POST" action="{{ route('logout') }}" class="mt-6">
+                            @csrf
+                            <x-danger-button>
+                                {{ __('Log Out') }}
+                            </x-danger-button>
+                        </form>
+                    </section>
+                </div>
+            </div>
+            {{-- END: New Log Out Section --}}
 
             <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                 <div class="max-w-xl">

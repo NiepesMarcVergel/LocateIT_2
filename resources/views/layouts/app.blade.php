@@ -176,7 +176,14 @@
                         </div>
                         <span style="font-weight: 500;">{{ Auth::user()->name }}</span>
                     </a>
-                </div>
+
+                    <form method="POST" action="{{ route('logout') }}" style="display: inline;">
+                        @csrf
+                        <button type="submit" class="nav-icon" style="background: none; border: none; padding: 0; margin-left: 10px;" title="Log Out">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </form>
+                    </div>
             @else
                 <div class="nav-right">
                     <a href="{{ route('login') }}" class="nav-icon">Login</a>

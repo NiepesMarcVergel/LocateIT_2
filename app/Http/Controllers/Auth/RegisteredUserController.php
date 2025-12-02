@@ -32,27 +32,28 @@ class RegisteredUserController extends Controller
         // 1. Validate the new fields
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:'.User::class], // Added
+            'username' => ['required', 'string', 'max:255', 'unique:'.User::class],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'campus' => ['required', 'string', 'max:255'],        // Added
-            'contact_number' => ['required', 'string', 'max:20'], // Added
+            'campus' => ['required', 'string', 'max:255'],
+            'contact_number' => ['required', 'string', 'max:20'],
         ]);
 
         // 2. Save the new fields to the database
         $user = User::create([
             'name' => $request->name,
-            'username' => $request->username, // Added
+            'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'campus' => $request->campus,                 // Added
-            'contact_number' => $request->contact_number, // Added
+            'campus' => $request->campus,
+            'contact_number' => $request->contact_number,
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // CHANGE: Redirect to 'home' instead of 'dashboard'
+        return redirect(route('home', absolute: false));
     }
 }
